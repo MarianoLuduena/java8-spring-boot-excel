@@ -1,0 +1,90 @@
+server:
+  compression:
+    enabled: true
+    min-response-size: 8KB
+
+spring:
+  application:
+    name: ${APPLICATION_NAME:java8-spring-boot-excel}
+  sleuth:
+    baggage:
+      remote-fields:
+        - traceId
+        - channelId
+        - enterpriseId
+      correlation-fields:
+        - channelId
+        - enterpriseId
+  servlet:
+    multipart:
+      resolve-lazily: true
+      max-file-size: 15MB
+      max-request-size: 15MB
+  datasource:
+    username: ${MERCURY_DATASOURCE_USERNAME}
+    password: ${MERCURY_DATASOURCE_PASSWORD}
+    url: ${MERCURY_DATASOURCE_URL}
+    driver-class-name: ${MERCURY_DATASOURCE_DRIVERCLASSNAME}
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServer2008Dialect
+        generate_statistics: false
+        default_schema: EXCEL
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /
+---
+server:
+  port: ${PORT}
+
+spring:
+  config:
+    activate:
+      on-profile: default
+    import: "configserver:"
+  cloud:
+    config:
+      uri: ${SPRING_CLOUD_CONFIG_URL}
+      label: ${SPRING_CLOUD_CONFIG_LABEL}
+      profile: ${SPRING_CLOUD_CONFIG_PROFILE}
+
+rest.client.default.timeout: ${service.timeout}
+
+seed:
+  prefix: "API-SEE:"
+  channel-id: ${mercury.channel.id}
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: optional:configserver:http://localhost:8888
+  datasource:
+    username: sa
+    password: myP455w0rd
+    url: ${DATASOURCE_URL:jdbc:sqlserver://localhost:1433;databaseName=master}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,refresh
+  health:
+    db:
+      enabled: false
+
+rest.client.default.timeout: 10000
+
+seed:
+  prefix: "API-SEE:"
+  channel-id: I
